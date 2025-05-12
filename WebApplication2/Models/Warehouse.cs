@@ -1,8 +1,8 @@
 namespace WebApplication2.Models;
 
-public class Warehouse : BaseEntity
+public class Warehouse
 {
-    public string Name { get; set; }
-    public string Address { get; set; }
-    public List<ProductWarehouse> Products { get; set; }
+    public int IdWarehouse { get; set; }
+    public string Name { get; set; } = null!;
+    public string Address { get; set; } = null!;
 }

@@ -1,9 +1,9 @@
-using WebApplication2.Models;
+using Microsoft.Data.SqlClient;
 
 namespace WebApplication2.Services.Abstractions;
 
 public interface IProductService
 {
-    public Task<bool> ExistsById(int id);
-    public Task<Product> GetById(int id);
+    Task<bool> ExistsAsync(int productId, SqlConnection conn, SqlTransaction tx);
+    Task<decimal> GetPriceAsync(int productId, SqlConnection conn, SqlTransaction tx);
 }

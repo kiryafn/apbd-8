@@ -1,31 +1,28 @@
+using Microsoft.Data.SqlClient;
 using WebApplication2.DTO;
-using WebApplication2.Models;
-using WebApplication2.Repositories.Abstractions;
 using WebApplication2.Services.Abstractions;
 
 namespace WebApplication2.Services;
 
 public class OrderService : IOrderService
 {
-    private readonly IOrderRepository _orderRepository;
-    
-    public OrderService(IOrderRepository orderRepository) {
-        _orderRepository = orderRepository;
+    public async Task<int?> FindMatchingOrderAsync(ProductWarehouseRequest request, SqlConnection conn, SqlTransaction tx)
+    {
+        var cmd = new SqlCommand(@"
+            SELECT TOP 1 IdOrder FROM [Order] 
+            WHERE IdProduct = @IdProduct AND Amount = @Amount AND FulfilledAt IS NULL 
+            ORDER BY CreatedAt DESC", conn, tx);
+        cmd.Parameters.AddWithValue("@IdProduct", request.IdProduct);
+        cmd.Parameters.AddWithValue("@Amount", request.Amount);
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? (int?)result : null;
     }
 
-
-    public async Task<int?> GetOrderIdByProductAsync(int productId, int amount, DateTime createdAt)
+    public async Task FulfillOrderAsync(int orderId, DateTime fulfilledAt, SqlConnection conn, SqlTransaction tx)
     {
-        return await _orderRepository.GetOrderIdByProductAsync(productId, amount, createdAt);
-    }
-
-    public async Task<Order> GetById(int id)
-    {
-        return await _orderRepository.GetById(id);
-    }
-
-    public async Task<bool> UpdateFullfieldAt(int orderId)
-    {
-        return await _orderRepository.UpdateFullfieldAt(orderId);    
+        var cmd = new SqlCommand("UPDATE [Order] SET FulfilledAt = @time WHERE IdOrder = @id", conn, tx);
+        cmd.Parameters.AddWithValue("@time", fulfilledAt);
+        cmd.Parameters.AddWithValue("@id", orderId);
+        await cmd.ExecuteNonQueryAsync();
     }
 }
